@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Facebook Boosting Multi Calculator</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for a better look */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* Light blue-gray background */
+        }
+        .card {
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 0 10px -5px rgba(0, 0, 0, 0.04);
+            transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); /* Smoother transition */
+        }
+        .input-field {
+            border: 1px solid #cbd5e1;
+            padding: 10px;
+            border-radius: 8px;
+            transition: all 0.3s ease-in-out; /* All property transition */
+        }
+        .input-field:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.3); /* Softer focus shadow */
+            transform: scale(1.01); /* Slight scale on focus */
+        }
+        /* Style for read-only fields */
+        .input-field[readonly] {
+            background-color: #e2e8f0; 
+            cursor: default;
+            border-color: #94a3b8;
+            color: #475569;
+            font-weight: 600; 
+        }
+
+        /* Result Box Animations */
+        .result-box {
+            background-color: #e0f2fe; 
+            border-left: 5px solid #06b6d4; 
+            padding: 1rem;
+            opacity: 0;
+            transform: translateY(10px);
+            animation: fadeIn 0.5s ease-out forwards; /* Fade in animation */
+        }
+        .result-box:nth-child(1) { animation-delay: 0.1s; }
+        .result-box:nth-child(2) { animation-delay: 0.2s; }
+        .result-box:nth-child(3) { animation-delay: 0.3s; }
+        .result-box:nth-child(4) { animation-delay: 0.4s; }
+        .result-box:nth-child(5) { animation-delay: 0.5s; }
+
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Custom range slider styling with transition */
+        .range-slider {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 8px;
+            background: #d1d5db;
+            outline: none;
+            opacity: 0.8;
+            transition: opacity .2s, background .4s;
+            border-radius: 4px;
+        }
+        .range-slider:hover {
+            opacity: 1;
+        }
+        .range-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px; /* Larger thumb */
+            height: 24px;
+            border-radius: 50%;
+            background: #3b82f6;
+            cursor: grab;
+            transition: all 0.3s ease-in-out;
+            box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.5);
+        }
+        .range-slider:active::-webkit-slider-thumb {
+            background: #1d4ed8;
+            box-shadow: 0 0 0 8px rgba(59, 130, 246, 0.3);
+            cursor: grabbing;
+        }
+        .range-slider::-moz-range-thumb {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #3b82f6;
+            cursor: grab;
+            transition: all 0.3s ease-in-out;
+        }
+        .range-slider:active::-moz-range-thumb {
+            background: #1d4ed8;
+            cursor: grabbing;
+        }
+
+        /* Custom Toggle Switch Styles */
+        .toggle-switch {
+            @apply relative inline-block w-14 h-8 rounded-full cursor-pointer transition-colors duration-200 ease-in-out; /* Slightly larger toggle */
+            background-color: #d1d5db; 
+        }
+        .toggle-switch input {
+            @apply opacity-0 w-0 h-0;
+        }
+        .toggle-switch span {
+            @apply absolute inset-0 rounded-full transition-all duration-300 ease-in-out;
+        }
+        .toggle-switch input:checked + span {
+            background-color: #10b981; 
+        }
+        .toggle-switch span:before {
+            content: "";
+            @apply absolute w-6 h-6 bg-white rounded-full transition-transform duration-300 ease-in-out;
+            left: 2px;
+            bottom: 2px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        .toggle-switch input:checked + span:before {
+            transform: translateX(20px);
+        }
+
+        /* Tab Transition & Highlighting */
+        .tab-button {
+            transition: all 0.3s ease;
+            border-radius: 0.5rem; /* rounded-lg */
+        }
+        /* Active Tab Style - Strong Highlight (Solid Blue Button) */
+        .tab-active {
+            background-color: #2563eb; /* blue-600 */
+            color: white;
+            box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3);
+            transform: translateY(-1px);
+        }
+        /* Inactive Tab Style */
+        .tab-inactive {
+            background-color: transparent;
+            color: #4b5563; /* gray-600 */
+        }
+        .tab-inactive:hover {
+            background-color: #e5e7eb; /* gray-200 */
+            color: #1f2937; /* gray-800 */
+        }
+
+        /* Mobile specific adjustments */
+        @media (max-width: 640px) {
+            .container {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body class="p-4 sm:p-8 flex items-start justify-center min-h-screen">
+    <div class="container max-w-lg w-full">
+        <!-- Main Card -->
+        <div class="card bg-white p-6 sm:p-8 rounded-xl">
+            <h1 class="text-3xl font-bold text-center text-gray-800 mb-2">
+                💰 Facebook বুস্টিং ক্যালকুলেটর
+            </h1>
+            <p class="text-center text-sm text-gray-500 mb-4">
+                কাস্টমারের চাহিদা অনুযায়ী মোড নির্বাচন করুন।
+            </p>
+
+            <!-- Mode Selector Tabs (Segmented Control Style) -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-1 mb-6 p-1 bg-gray-100 rounded-xl border border-gray-200">
+                <button id="tabBudget" onclick="switchMode('budget')" class="tab-button py-3 px-2 text-xs sm:text-sm font-bold tab-active whitespace-nowrap">১. মোট বাজেট</button>
+                <button id="tabDaily" onclick="switchMode('daily')" class="tab-button py-3 px-2 text-xs sm:text-sm font-bold tab-inactive whitespace-nowrap">২. দৈনিক বাজেট</button>
+                <button id="tabCalcDuration" onclick="switchMode('calculateDuration')" class="tab-button py-3 px-2 text-xs sm:text-sm font-bold tab-inactive whitespace-nowrap">৩. বাজেট ও খরচ</button>
+                <button id="tabDollar" onclick="switchMode('dollar')" class="tab-button py-3 px-2 text-xs sm:text-sm font-bold tab-inactive whitespace-nowrap">৪. ডলার বাজেট</button>
+            </div>
+
+
+            <!-- COMMON PARAMETERS (Read-Only) -->
+            <h2 class="text-lg font-semibold text-gray-700 pt-2 border-t mt-4">ডিফল্ট প্যারামিটার</h2>
+
+            <div class="flex space-x-4 mb-4">
+                <!-- Fixed VAT Rate (%) - READONLY -->
+                <div class="flex-1">
+                    <label for="vatRate" class="block text-sm font-medium text-gray-700 mb-1">ফেসবুক ভ্যাট</label>
+                    <input type="number" id="vatRate" value="15" readonly class="input-field w-full" title="১৫% ফেসবুক ভ্যাট (নির্দিষ্ট)।">
+                </div>
+
+                <!-- USD Exchange Rate (BDT) - READONLY -->
+                <div class="flex-1">
+                    <label for="exchangeRate" class="block text-sm font-medium text-gray-700 mb-1">১ USD বিনিময় হার</label>
+                    <input type="number" id="exchangeRate" value="150" readonly class="input-field w-full" title="এই মানটি ডিফল্ট মান হিসেবে ব্যবহৃত হচ্ছে এবং পরিবর্তন করা যাবে না।">
+                </div>
+            </div>
+
+            <!-- Service Charge Toggle (Common) -->
+            <div class="flex items-center justify-between p-4 bg-yellow-50 rounded-lg border-2 border-yellow-300 mb-6 transition duration-300 hover:shadow-md">
+                <label for="serviceChargeToggle" class="text-lg font-bold text-yellow-800 cursor-pointer">
+                    সার্ভিস চার্জ (৫%)
+                </label>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="serviceChargeToggle" onchange="handleCommonChange()">
+                    <span></span>
+                </label>
+            </div>
+            
+            
+            <!-- MODE 1: TOTAL BUDGET INPUT (BDT) -->
+            <div id="budgetMode">
+                <div class="space-y-6">
+                    <!-- 1. Total Budget (BDT) - ONLY ACTIVE INPUT -->
+                    <div class="bg-green-50 p-4 rounded-lg border-2 border-green-300 transition duration-300 hover:shadow-lg">
+                        <label for="budget" class="block text-xl font-bold text-green-700 mb-1">কাস্টমারের মোট বাজেট (BDT)</label>
+                        <input type="number" id="budget" value="3000" min="100" class="input-field w-full text-2xl text-green-700 font-extrabold" placeholder="বাজেট টাইপ করুন..." oninput="calculateByTotalBudget()">
+                    </div>
+
+                    <!-- 2. Duration (Days) - SLIDER INPUT -->
+                    <div class="bg-blue-50 p-4 rounded-lg border-2 border-blue-300 transition duration-300 hover:shadow-lg">
+                        <label for="durationBudget" class="block text-xl font-bold text-blue-700 mb-2 flex justify-between items-center">
+                            <span>বুস্টিং এর সময়কাল</span>
+                            <span id="durationDisplayBudget" class="text-2xl font-extrabold text-blue-700 transition duration-150">5 দিন</span>
+                        </label>
+                        <input type="range" id="durationBudget" value="5" min="4" max="100" class="range-slider" oninput="calculateByTotalBudget();" title="৪ দিন থেকে ১০০ দিন পর্যন্ত পরিবর্তন করুন।">
+                        <p class="text-xs text-red-500 mt-1">* সর্বনিম্ন সময়কাল ৪ দিন</p>
+                    </div>
+                </div>
+
+                <!-- Budget Mode Result Section -->
+                <div id="resultsBudget" class="mt-8 space-y-3 hidden">
+                    <h2 class="text-xl font-bold text-blue-600 mb-4 border-b pb-2">হিসাবের চূড়ান্ত ফলাফল</h2>
+
+                    <!-- NEW: Total Purchasable USD -->
+                    <div class="result-box rounded-lg bg-indigo-50 border-indigo-300 border-l-4">
+                        <p class="text-sm text-gray-600">মোট কেনা যাবে (Purchasable USD):</p>
+                        <p id="totalPurchasableUSD" class="text-2xl font-extrabold text-indigo-700 transition duration-150">0.00 USD</p>
+                    </div>
+
+                    <!-- 2. Remaining Budget (BDT) -->
+                    <div class="result-box rounded-lg">
+                        <p class="text-sm text-gray-600">ভ্যাট-পরবর্তী অবশিষ্ট বাজেট (মূল খরচ):</p>
+                        <p id="remainingBudgetBDT" class="text-xl font-extrabold text-green-700 transition duration-150">0 BDT</p>
+                    </div>
+                    
+                    <!-- 1. Total Charge Cost (BDT + USD) -->
+                    <div class="result-box rounded-lg bg-red-50 border-red-300 border-l-4">
+                        <p class="text-sm text-gray-600">মোট চার্জ (ভ্যাট + সার্ভিস):</p>
+                        <p id="totalChargeCostBudgetBDT" class="text-lg font-bold text-red-600 transition duration-150">0 BDT</p>
+                        <p id="totalChargeCostBudgetUSD" class="text-sm font-medium text-gray-500 mt-1 transition duration-150">($0.00 USD)</p>
+                    </div>
+
+                    <!-- Daily Costs Group -->
+                    <div class="bg-white p-4 rounded-lg shadow-inner border border-blue-200">
+                        <h3 id="dailyCostHeaderBudget" class="text-lg font-bold text-blue-700 mb-2">দৈনিক খরচের হিসাব</h3>
+                        
+                        <!-- 3. Daily Cost (BDT) -->
+                        <div class="flex justify-between items-center py-2 border-b">
+                            <p class="text-base text-gray-700">দৈনিক খরচ (টাকা):</p>
+                            <p id="dailyCostBudgetBDT" class="text-lg font-bold text-gray-800 transition duration-150">0 BDT</p>
+                        </div>
+
+                        <!-- 4. Daily Cost (USD) -->
+                        <div class="flex justify-between items-center pt-2">
+                            <p class="text-base text-gray-700">দৈনিক খরচ (USD):</p>
+                            <p id="dailyCostBudgetUSD" class="text-xl font-extrabold text-blue-700 transition duration-150">0.00 USD</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            
+            <!-- MODE 2: DAILY BUDGET INPUT (USD) -->
+            <div id="dailyMode" class="hidden">
+                <div class="space-y-6">
+                    <!-- 1. Daily Budget (USD) - ONLY ACTIVE INPUT -->
+                    <div class="bg-green-50 p-4 rounded-lg border-2 border-green-300 transition duration-300 hover:shadow-lg">
+                        <label for="dailyUSDInput" class="block text-xl font-bold text-green-700 mb-1">দৈনিক বাজেট (USD) - সর্বনিম্ন $1</label>
+                        <input type="number" id="dailyUSDInput" value="5" min="1" step="0.5" class="input-field w-full text-2xl text-green-700 font-extrabold" placeholder="পরিমাণ টাইপ করুন..." oninput="calculateByDailyBudget()">
+                    </div>
+                    
+                    <!-- 2. Duration (Days) - SLIDER INPUT -->
+                    <div class="bg-blue-50 p-4 rounded-lg border-2 border-blue-300 transition duration-300 hover:shadow-lg">
+                        <label for="durationDaily" class="block text-xl font-bold text-blue-700 mb-2 flex justify-between items-center">
+                            <span>বুস্টিং এর সময়কাল</span>
+                            <span id="durationDisplayDaily" class="text-2xl font-extrabold text-blue-700 transition duration-150">5 দিন</span>
+                        </label>
+                        <input type="range" id="durationDaily" value="5" min="4" max="100" class="range-slider" oninput="calculateByDailyBudget();" title="৪ দিন থেকে ১০০ দিন পর্যন্ত পরিবর্তন করুন।">
+                        <p class="text-xs text-red-500 mt-1">* সর্বনিম্ন সময়কাল ৪ দিন</p>
+                    </div>
+                </div>
+
+                <!-- Daily Mode Result Section -->
+                <div id="resultsDaily" class="mt-8 space-y-3 hidden">
+                    <h2 class="text-xl font-bold text-blue-600 mb-4 border-b pb-2">হিসাবের চূড়ান্ত ফলাফল</h2>
+                    
+                    <!-- REQUIRED TOTAL BDT -->
+                    <div class="result-box rounded-lg bg-indigo-100 border-indigo-400 border-l-4">
+                        <p class="text-sm text-gray-600">মোট প্রয়োজনীয় বাজেট (BDT):</p>
+                        <p id="requiredTotalBudgetBDT" class="text-2xl font-extrabold text-indigo-800 transition duration-150">0 BDT</p>
+                        <p class="text-xs text-gray-500 mt-1">(ভ্যাট ও সার্ভিস চার্জ সহ)</p>
+                    </div>
+
+                    <!-- Total USD Spent -->
+                    <div class="result-box rounded-lg bg-green-50 border-green-300 border-l-4">
+                        <p class="text-sm text-gray-600">মোট খরচ (USD):</p>
+                        <p id="totalUSDSpent" class="text-xl font-extrabold text-green-700 transition duration-150">0.00 USD</p>
+                    </div>
+
+                    <!-- Total Charge Cost (BDT + USD) -->
+                    <div class="result-box rounded-lg bg-red-50 border-red-300 border-l-4">
+                        <p class="text-sm text-gray-600">মোট চার্জ (ভ্যাট + সার্ভিস):</p>
+                        <p id="totalChargeCostDailyBDT" class="text-lg font-bold text-red-600 transition duration-150">0 BDT</p>
+                        <p id="totalChargeCostDailyUSD" class="text-sm font-medium text-gray-500 mt-1 transition duration-150">($0.00 USD)</p>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- MODE 3: CALCULATE DURATION (Total Budget + Daily USD) -->
+            <div id="durationMode" class="hidden">
+                <div class="space-y-6">
+                    <!-- 1. Total Budget (BDT) - Input -->
+                    <div class="bg-green-50 p-4 rounded-lg border-2 border-green-300 transition duration-300 hover:shadow-lg">
+                        <label for="budgetDurationMode" class="block text-xl font-bold text-green-700 mb-1">কাস্টমারের মোট বাজেট (BDT)</label>
+                        <input type="number" id="budgetDurationMode" value="5000" min="100" class="input-field w-full text-2xl text-green-700 font-extrabold" placeholder="মোট বাজেট টাইপ করুন..." oninput="calculateByTotalBudgetAndDailyUSD()">
+                    </div>
+
+                    <!-- 2. Daily Budget (USD) - Input (Constrained) -->
+                    <div class="bg-blue-50 p-4 rounded-lg border-2 border-blue-300 transition duration-300 hover:shadow-lg">
+                        <label for="dailyUSDInputDurationMode" class="block text-xl font-bold text-blue-700 mb-1 flex justify-between items-center">
+                            <span>দৈনিক বাজেট (USD)</span>
+                            <span id="dailyUSDInputDurationModeDisplay" class="text-2xl font-extrabold text-blue-700 transition duration-150">$5.00 USD</span>
+                        </label>
+                        <p class="text-sm text-blue-600 mb-2">সর্বনিম্ন: $1.00 | সর্বোচ্চ: <span id="maxDailyUSDDurationMode" class="font-bold">0.00 USD</span></p>
+                        
+                        <input type="number" id="dailyUSDInputDurationMode" value="5" min="1" step="0.01" 
+                            class="input-field w-full text-2xl text-blue-700 font-extrabold" 
+                            placeholder="দৈনিক পরিমাণ..." 
+                            oninput="calculateByTotalBudgetAndDailyUSD()">
+                    </div>
+                </div>
+                
+                <!-- Duration Mode Result Section -->
+                <div id="resultsDurationMode" class="mt-8 space-y-3 hidden">
+                    <h2 class="text-xl font-bold text-blue-600 mb-4 border-b pb-2">হিসাবের চূড়ান্ত ফলাফল</h2>
+                    
+                    <!-- CALCULATED DURATION -->
+                    <div class="result-box rounded-lg bg-yellow-100 border-yellow-500 border-l-4">
+                        <p class="text-sm text-gray-600">বুস্ট চলবে (সময়কাল):</p>
+                        <p id="calculatedDurationDays" class="text-2xl font-extrabold text-yellow-800 transition duration-150">0 দিন</p>
+                        <p id="totalUSDSpentDurationMode" class="text-xs text-gray-500 mt-1">($0.00 USD মোট খরচ হবে)</p>
+                    </div>
+
+                    <!-- Remaining Budget (BDT) -->
+                    <div class="result-box rounded-lg bg-green-50 border-green-300 border-l-4">
+                        <p class="text-sm text-gray-600">ভ্যাট-পরবর্তী অবশিষ্ট বাজেট (মূল খরচ):</p>
+                        <p id="remainingBudgetDurationModeBDT" class="text-xl font-extrabold text-green-700 transition duration-150">0 BDT</p>
+                    </div>
+
+                    <!-- Total Charge Cost (BDT + USD) -->
+                    <div class="result-box rounded-lg bg-red-50 border-red-300 border-l-4">
+                        <p class="text-sm text-gray-600">মোট চার্জ (ভ্যাট + সার্ভিস):</p>
+                        <p id="totalChargeCostDurationModeBDT" class="text-lg font-bold text-red-600 transition duration-150">0 BDT</p>
+                        <p id="totalChargeCostDurationModeUSD" class="text-sm font-medium text-gray-500 mt-1 transition duration-150">($0.00 USD)</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MODE 4: TOTAL DOLLAR BUDGET (New Mode) -->
+            <div id="dollarMode" class="hidden">
+                <div class="space-y-6">
+                    <!-- 1. Total Dollar Budget (USD) - INPUT -->
+                    <div class="bg-purple-50 p-4 rounded-lg border-2 border-purple-300 transition duration-300 hover:shadow-lg">
+                        <label for="totalDollarInput" class="block text-xl font-bold text-purple-700 mb-1">কাস্টমারের মোট ডলার বাজেট (USD)</label>
+                        <input type="number" id="totalDollarInput" value="20" min="4" class="input-field w-full text-2xl text-purple-700 font-extrabold" placeholder="মোট ডলার টাইপ করুন (যেমন 20)..." oninput="calculateByTotalDollarBudget()">
+                        <p class="text-xs text-red-500 mt-1">* সর্বনিম্ন বাজেট $4 (৪ দিন x $1)</p>
+                    </div>
+
+                    <!-- 2. Duration (Days) - SLIDER INPUT -->
+                    <div class="bg-blue-50 p-4 rounded-lg border-2 border-blue-300 transition duration-300 hover:shadow-lg">
+                        <label for="durationDollar" class="block text-xl font-bold text-blue-700 mb-2 flex justify-between items-center">
+                            <span>বুস্টিং এর সময়কাল</span>
+                            <span id="durationDisplayDollar" class="text-2xl font-extrabold text-blue-700 transition duration-150">5 দিন</span>
+                        </label>
+                        <input type="range" id="durationDollar" value="5" min="4" max="30" class="range-slider" oninput="calculateByTotalDollarBudget();" title="৪ দিন থেকে ৩০ দিন পর্যন্ত পরিবর্তন করুন।">
+                        <p class="text-xs text-red-500 mt-1">* সর্বনিম্ন সময়কাল ৪ দিন</p>
+                    </div>
+                </div>
+
+                <!-- Dollar Mode Result Section -->
+                <div id="resultsDollar" class="mt-8 space-y-3 hidden">
+                    <h2 class="text-xl font-bold text-blue-600 mb-4 border-b pb-2">হিসাবের চূড়ান্ত ফলাফল</h2>
+
+                    <!-- Daily Spending (USD) -->
+                    <div class="result-box rounded-lg bg-indigo-100 border-indigo-400 border-l-4">
+                        <p class="text-sm text-gray-600">দৈনিক বাজেট (USD):</p>
+                        <p id="dailyUSDDollarMode" class="text-2xl font-extrabold text-indigo-800 transition duration-150">0.00 USD</p>
+                    </div>
+
+                    <!-- Required Total BDT -->
+                    <div class="result-box rounded-lg bg-green-50 border-green-300 border-l-4">
+                        <p class="text-sm text-gray-600">মোট বিল (টাকা - BDT):</p>
+                        <p id="totalBDTDollarMode" class="text-xl font-extrabold text-green-700 transition duration-150">0 BDT</p>
+                        <p class="text-xs text-gray-500 mt-1">(ভ্যাট ও সার্ভিস চার্জ সহ)</p>
+                    </div>
+
+                    <!-- Breakdown -->
+                    <div class="bg-white p-4 rounded-lg shadow-inner border border-gray-200 text-sm space-y-2">
+                        <h3 class="font-bold text-gray-700 border-b pb-1">খরচের ব্রেকডাউন</h3>
+                        <div class="flex justify-between">
+                            <span>মূল অ্যাড খরচ (BDT):</span>
+                            <span id="adCostBDTDollarMode" class="font-semibold">0 BDT</span>
+                        </div>
+                        <div class="flex justify-between text-red-600">
+                            <span>ভ্যাট + সার্ভিস চার্জ:</span>
+                            <span id="breakdownChargeDollarMode" class="font-bold">+ 0 BDT</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- Error/Message Box -->
+            <div id="messageBox" class="mt-6 hidden bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded-lg" role="alert">
+                <p class="font-bold">সতর্কতা!</p>
+                <p id="messageText">ত্রুটি বার্তা</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Utility Functions ---
+
+        function showMessage(text) {
+            const messageBox = document.getElementById('messageBox');
+            const messageText = document.getElementById('messageText');
+            messageBox.style.opacity = 0; // Start fade-in effect
+            messageText.textContent = text;
+            messageBox.classList.remove('hidden');
+            setTimeout(() => {
+                messageBox.style.opacity = 1;
+            }, 50);
+        }
+
+        function hideMessage() {
+            const messageBox = document.getElementById('messageBox');
+            messageBox.style.opacity = 0;
+            setTimeout(() => {
+                messageBox.classList.add('hidden');
+            }, 300); // Wait for fade-out transition
+        }
+        
+        // Helper function for formatting numbers to two decimal places
+        const formatBDT = (amount) => {
+            if (isNaN(amount) || amount === null) return "0.00 BDT";
+            return amount.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",") + " BDT";
+        };
+        const formatUSDWithParenthesis = (amount) => {
+            if (isNaN(amount) || amount === null) return "$0.00";
+            return "($" + amount.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",") + " USD)";
+        };
+        const formatUSDOnly = (amount) => {
+            if (isNaN(amount) || amount === null) return "0.00 USD";
+            return amount.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",") + " USD";
+        };
+
+        // --- Core Logic ---
+
+        const SLIDER_MIN_CAP = 4; // Minimum 4 Days
+        const SLIDER_MAX_CAP = 100;
+        const MIN_DAILY_USD = 1.0; // Minimum $1/Day
+        const FIXED_VAT_RATE = 15; 
+        const SERVICE_CHARGE_RATE = 5; 
+
+        let currentMode = 'budget';
+
+        function getCalculatedRates() {
+            const exchangeRate = parseFloat(document.getElementById('exchangeRate').value);
+            const isServiceChargeActive = document.getElementById('serviceChargeToggle').checked;
+            
+            let totalChargeRate = FIXED_VAT_RATE;
+            if (isServiceChargeActive) {
+                totalChargeRate += SERVICE_CHARGE_RATE;
+            }
+
+            return { exchangeRate, totalChargeRate };
+        }
+
+        // Handles changes in common fields (Service Toggle)
+        function handleCommonChange() {
+            if (currentMode === 'budget') {
+                calculateByTotalBudget();
+            } else if (currentMode === 'daily') {
+                calculateByDailyBudget();
+            } else if (currentMode === 'calculateDuration') {
+                calculateByTotalBudgetAndDailyUSD();
+            } else if (currentMode === 'dollar') {
+                calculateByTotalDollarBudget();
+            }
+        }
+        
+        // Function to switch between Modes
+        function switchMode(mode) {
+            currentMode = mode;
+            const budgetModeDiv = document.getElementById('budgetMode');
+            const dailyModeDiv = document.getElementById('dailyMode');
+            const durationModeDiv = document.getElementById('durationMode');
+            const dollarModeDiv = document.getElementById('dollarMode');
+            
+            const tabBudget = document.getElementById('tabBudget');
+            const tabDaily = document.getElementById('tabDaily');
+            const tabCalcDuration = document.getElementById('tabCalcDuration');
+            const tabDollar = document.getElementById('tabDollar');
+
+            hideMessage();
+
+            // Hide all modes
+            budgetModeDiv.classList.add('hidden');
+            dailyModeDiv.classList.add('hidden');
+            durationModeDiv.classList.add('hidden');
+            dollarModeDiv.classList.add('hidden');
+
+            // Helper functions for class management
+            const setTabInactive = (tab) => {
+                tab.classList.remove('tab-active');
+                tab.classList.add('tab-inactive');
+            };
+            const setTabActive = (tab) => {
+                tab.classList.remove('tab-inactive');
+                tab.classList.add('tab-active');
+            };
+
+            // Reset all to inactive
+            setTabInactive(tabBudget);
+            setTabInactive(tabDaily);
+            setTabInactive(tabCalcDuration);
+            setTabInactive(tabDollar);
+
+            // Show active mode and set active tab
+            if (mode === 'budget') {
+                budgetModeDiv.classList.remove('hidden');
+                setTabActive(tabBudget);
+                document.getElementById('resultsBudget').classList.remove('hidden');
+                document.getElementById('resultsDaily').classList.add('hidden');
+                document.getElementById('resultsDurationMode').classList.add('hidden');
+                document.getElementById('resultsDollar').classList.add('hidden');
+                calculateByTotalBudget();
+            } else if (mode === 'daily') {
+                dailyModeDiv.classList.remove('hidden');
+                setTabActive(tabDaily);
+                document.getElementById('resultsBudget').classList.add('hidden');
+                document.getElementById('resultsDaily').classList.remove('hidden');
+                document.getElementById('resultsDurationMode').classList.add('hidden');
+                document.getElementById('resultsDollar').classList.add('hidden');
+                calculateByDailyBudget();
+            } else if (mode === 'calculateDuration') {
+                durationModeDiv.classList.remove('hidden');
+                setTabActive(tabCalcDuration);
+                document.getElementById('resultsBudget').classList.add('hidden');
+                document.getElementById('resultsDaily').classList.add('hidden');
+                document.getElementById('resultsDurationMode').classList.remove('hidden');
+                document.getElementById('resultsDollar').classList.add('hidden');
+                calculateByTotalBudgetAndDailyUSD();
+            } else if (mode === 'dollar') {
+                dollarModeDiv.classList.remove('hidden');
+                setTabActive(tabDollar);
+                document.getElementById('resultsBudget').classList.add('hidden');
+                document.getElementById('resultsDaily').classList.add('hidden');
+                document.getElementById('resultsDurationMode').classList.add('hidden');
+                document.getElementById('resultsDollar').classList.remove('hidden');
+                calculateByTotalDollarBudget();
+            }
+        }
+
+        // --- Mode 1: Calculate by Total Budget (BDT) ---
+
+        function updateDurationDisplayBudget() {
+            const durationDays = document.getElementById('durationBudget').value;
+            document.getElementById('durationDisplayBudget').textContent = `${durationDays} দিন`;
+            document.getElementById('dailyCostHeaderBudget').textContent = `দৈনিক খরচের হিসাব (${durationDays} দিনের জন্য)`;
+        }
+
+        function calculateByTotalBudget() {
+            hideMessage();
+            updateDurationDisplayBudget();
+            
+            const { exchangeRate, totalChargeRate } = getCalculatedRates();
+            const totalBudget = parseFloat(document.getElementById('budget').value);
+            const durationSlider = document.getElementById('durationBudget');
+            
+            // Validation: Check strict minimum 4 days * $1/day budget capability
+            // Need approx (4 * 1 * exchangeRate) + VAT/Fees
+            const minRequiredBudget = (SLIDER_MIN_CAP * MIN_DAILY_USD * exchangeRate) * (1 + totalChargeRate/100);
+
+            if (isNaN(totalBudget) || totalBudget < minRequiredBudget) {
+                showMessage(`বাজেট অত্যন্ত কম। সর্বনিম্ন ৪ দিনের জন্য কমপক্ষে ${Math.ceil(minRequiredBudget)} টাকা বাজেট প্রয়োজন।`);
+                document.getElementById('resultsBudget').classList.add('hidden');
+                return;
+            }
+            
+            // 1. Total Charge Cost (মোট চার্জ)
+            const totalChargeCost = (totalBudget * totalChargeRate) / 100;
+            const totalChargeCostUSD = totalChargeCost / exchangeRate;
+            
+            // 2. Remaining Budget (ভ্যাট-পরবর্তী অবশিষ্ট বাজেট / Purchasable USD)
+            const remainingBudget = totalBudget - totalChargeCost;
+            const remainingBudgetUSD = remainingBudget / exchangeRate; 
+
+            // 3. Max Duration Calculation based on $1 USD minimum daily spend
+            // Ensure we never exceed duration that would drop daily spend below $1
+            let maxAllowedDuration = Math.floor(remainingBudgetUSD / MIN_DAILY_USD); 
+            const finalMaxDuration = Math.min(SLIDER_MAX_CAP, maxAllowedDuration);
+            
+            // Logic for limiting the slider
+            durationSlider.max = Math.max(SLIDER_MIN_CAP, finalMaxDuration); // Ensure max is at least 4
+            
+            // Strict check: Duration slider must not go below 4
+            if (parseInt(durationSlider.value) < SLIDER_MIN_CAP) {
+                durationSlider.value = SLIDER_MIN_CAP;
+            }
+            // Also check max cap
+            if (parseInt(durationSlider.value) > finalMaxDuration) {
+                 durationSlider.value = finalMaxDuration;
+            }
+            
+            // Get the final, corrected duration value for calculation
+            const durationDays = parseInt(durationSlider.value);
+            updateDurationDisplayBudget(); 
+
+            // Calculate daily costs 
+            const dailyCostBDT = remainingBudget / durationDays;
+            const dailyCostUSD = dailyCostBDT / exchangeRate;
+
+            // Final Safety check
+            if (dailyCostUSD < MIN_DAILY_USD) {
+                showMessage(`সতর্কতা: দৈনিক বাজেট $${MIN_DAILY_USD} এর নিচে নেমে গেছে। দয়া করে সময়কাল কমান অথবা বাজেট বাড়ান।`);
+            }
+
+            // --- Display Results ---
+            document.getElementById('remainingBudgetBDT').textContent = formatBDT(remainingBudget);
+            document.getElementById('totalPurchasableUSD').textContent = formatUSDOnly(remainingBudgetUSD);
+            document.getElementById('totalChargeCostBudgetBDT').textContent = formatBDT(totalChargeCost);
+            document.getElementById('totalChargeCostBudgetUSD').textContent = formatUSDWithParenthesis(totalChargeCostUSD);
+            document.getElementById('dailyCostBudgetBDT').textContent = formatBDT(dailyCostBDT);
+            document.getElementById('dailyCostBudgetUSD').textContent = formatUSDOnly(dailyCostUSD);
+
+            document.getElementById('resultsBudget').classList.remove('hidden');
+        }
+
+
+        // --- Mode 2: Calculate by Daily Budget (USD) ---
+
+        function updateDurationDisplayDaily() {
+            const durationDays = document.getElementById('durationDaily').value;
+            document.getElementById('durationDisplayDaily').textContent = `${durationDays} দিন`;
+        }
+        
+        function calculateByDailyBudget() {
+            hideMessage();
+            updateDurationDisplayDaily();
+
+            const { exchangeRate, totalChargeRate } = getCalculatedRates();
+            const dailyUSDInput = document.getElementById('dailyUSDInput');
+            let dailyUSD = parseFloat(dailyUSDInput.value);
+            const durationSlider = document.getElementById('durationDaily');
+            
+            // Validate Daily Budget Input
+            if (isNaN(dailyUSD) || dailyUSD < MIN_DAILY_USD) {
+                showMessage(`দৈনিক বাজেট অবশ্যই কমপক্ষে $${MIN_DAILY_USD} ডলার হতে হবে।`);
+                document.getElementById('resultsDaily').classList.add('hidden');
+                return;
+            }
+
+            // Validate Duration Input (Slider)
+            if (parseInt(durationSlider.value) < SLIDER_MIN_CAP) {
+                durationSlider.value = SLIDER_MIN_CAP;
+                updateDurationDisplayDaily();
+                // Optional: showMessage("সর্বনিম্ন সময়কাল ৪ দিন সেট করা হয়েছে।");
+            }
+            const durationDays = parseInt(durationSlider.value);
+            
+            // 1. Total USD Spent (Purchasable USD)
+            const totalUSDSpent = dailyUSD * durationDays;
+
+            // 2. Remaining Budget (BDT) - Amount required for boosting without tax
+            const remainingBudgetBDT = totalUSDSpent * exchangeRate; 
+
+            // 3. Required Total Budget (BDT) - Formula: BDT / (1 - Rate/100)
+            const requiredTotalBudgetBDT = remainingBudgetBDT / (1 - (totalChargeRate / 100));
+
+            // 4. Total Charge Cost (BDT)
+            const totalChargeCostBDT = requiredTotalBudgetBDT - remainingBudgetBDT;
+            const totalChargeCostUSD = totalChargeCostBDT / exchangeRate;
+
+            
+            // --- Display Results ---
+            document.getElementById('requiredTotalBudgetBDT').textContent = formatBDT(requiredTotalBudgetBDT);
+            document.getElementById('totalUSDSpent').textContent = formatUSDOnly(totalUSDSpent);
+            document.getElementById('totalChargeCostDailyBDT').textContent = formatBDT(totalChargeCostBDT);
+            document.getElementById('totalChargeCostDailyUSD').textContent = formatUSDWithParenthesis(totalChargeCostUSD);
+            
+            document.getElementById('resultsDaily').classList.remove('hidden');
+        }
+
+        // --- Mode 3: Calculate Duration (Total Budget + Daily USD) ---
+        function calculateByTotalBudgetAndDailyUSD() {
+            hideMessage();
+
+            const { exchangeRate, totalChargeRate } = getCalculatedRates();
+            const totalBudgetInput = document.getElementById('budgetDurationMode');
+            const dailyUSDInput = document.getElementById('dailyUSDInputDurationMode');
+            const maxDailyUSDDisplay = document.getElementById('maxDailyUSDDurationMode');
+
+            const totalBudget = parseFloat(totalBudgetInput.value);
+            let dailyUSD = parseFloat(dailyUSDInput.value);
+            
+            // Minimum budget check for at least 4 days * $1
+             const minRequiredBudget = (SLIDER_MIN_CAP * MIN_DAILY_USD * exchangeRate) * (1 + totalChargeRate/100);
+
+            // --- Basic Validations ---
+            if (isNaN(totalBudget) || totalBudget < minRequiredBudget) {
+                showMessage(`বাজেট অত্যন্ত কম। সর্বনিম্ন ৪ দিনের জন্য ($1/day) কমপক্ষে ${Math.ceil(minRequiredBudget)} টাকা বাজেট প্রয়োজন।`);
+                document.getElementById('resultsDurationMode').classList.add('hidden');
+                maxDailyUSDDisplay.textContent = "0.00 USD";
+                return;
+            }
+            
+            // 1. Calculate Total Purchasable USD
+            const totalChargeCost = (totalBudget * totalChargeRate) / 100;
+            const remainingBudget = totalBudget - totalChargeCost;
+            const remainingBudgetUSD = remainingBudget / exchangeRate; 
+            const totalChargeCostUSD = totalChargeCost / exchangeRate;
+
+            // 2. Determine Max Daily USD (based on minimum 4 days run time)
+            // Max Daily USD = Total Purchasable USD / Minimum Duration (4 days)
+            const MAX_DAILY_USD_ALLOWED = remainingBudgetUSD / SLIDER_MIN_CAP; // SLIDER_MIN_CAP is 4
+
+            maxDailyUSDDisplay.textContent = formatUSDOnly(MAX_DAILY_USD_ALLOWED);
+            dailyUSDInput.max = MAX_DAILY_USD_ALLOWED.toFixed(2);
+            
+            // Check if max daily budget is even possible >= $1
+            if (MAX_DAILY_USD_ALLOWED < MIN_DAILY_USD) {
+                 showMessage(`এই বাজেট দিয়ে সর্বনিম্ন ৪ দিন বুস্ট চালানো সম্ভব নয় (দৈনিক $1 হিসেবে)।`);
+                 document.getElementById('resultsDurationMode').classList.add('hidden');
+                 return;
+            }
+
+            // 3. Validate Daily USD Input
+            if (isNaN(dailyUSD) || dailyUSD < MIN_DAILY_USD) {
+                // If user clears input or types < 1, don't show results yet or show warning
+                 // showMessage(`দৈনিক বাজেট অবশ্যই কমপক্ষে $${MIN_DAILY_USD} ডলার হতে হবে।`);
+                 // Instead of hiding, we can rely on the user finishing typing. But for calculation safety:
+                 if (dailyUSD < MIN_DAILY_USD && dailyUSD > 0) { // Only warn if they typed something valid but low
+                     showMessage(`দৈনিক বাজেট অবশ্যই কমপক্ষে $${MIN_DAILY_USD} ডলার হতে হবে।`);
+                     document.getElementById('resultsDurationMode').classList.add('hidden');
+                     return;
+                 }
+                 // Use default or stop
+                 return;
+            }
+            
+            // Check if the daily USD input exceeds the calculated max limit
+            if (dailyUSD > MAX_DAILY_USD_ALLOWED + 0.001) { 
+                showMessage(`দৈনিক বাজেট $${dailyUSD.toFixed(2)} সেট করা যাবে না। আপনার বাজেট অনুযায়ী সর্বনিম্ন ${SLIDER_MIN_CAP} দিনের জন্য সর্বোচ্চ দৈনিক $${MAX_DAILY_USD_ALLOWED.toFixed(2)} খরচ করা সম্ভব।`);
+                dailyUSD = MAX_DAILY_USD_ALLOWED;
+                dailyUSDInput.value = MAX_DAILY_USD_ALLOWED.toFixed(2);
+            }
+
+            // 4. Final Calculation
+            
+            // Calculated Duration (Days)
+            let durationDays = remainingBudgetUSD / dailyUSD;
+            
+            // Check strict duration minimum
+            if (durationDays < SLIDER_MIN_CAP) {
+                // This shouldn't happen due to maxDailyUSD logic, but as safeguard
+                showMessage(`হিসাবকৃত সময়কাল ${SLIDER_MIN_CAP} দিনের কম হচ্ছে। দয়া করে দৈনিক বাজেট কমান।`);
+            }
+            
+            // Total USD Spent (Must be equal to Remaining Budget USD)
+            const totalUSDSpent = remainingBudgetUSD; 
+            
+            // Round down the days and calculate remaining hours
+            const actualDurationDays = Math.floor(durationDays);
+            const remainingHours = (durationDays - actualDurationDays) * 24;
+
+            // --- Display Results ---
+            
+            let durationText = "";
+            if (actualDurationDays > 0) {
+                durationText += `${actualDurationDays} দিন`;
+            }
+            if (remainingHours >= 0.1) {
+                durationText += (durationText ? " এবং " : "") + `${remainingHours.toFixed(1)} ঘণ্টা`;
+            } else if (durationText === "") {
+                durationText = "১ দিনেরও কম";
+            }
+
+            document.getElementById('dailyUSDInputDurationModeDisplay').textContent = formatUSDOnly(dailyUSD); 
+            document.getElementById('calculatedDurationDays').textContent = durationText;
+            document.getElementById('totalUSDSpentDurationMode').textContent = `($${formatUSDOnly(totalUSDSpent).slice(0, -4)} USD মোট খরচ হবে)`;
+            document.getElementById('remainingBudgetDurationModeBDT').textContent = formatBDT(remainingBudget);
+            document.getElementById('totalChargeCostDurationModeBDT').textContent = formatBDT(totalChargeCost);
+            document.getElementById('totalChargeCostDurationModeUSD').textContent = formatUSDWithParenthesis(totalChargeCostUSD);
+
+            document.getElementById('resultsDurationMode').classList.remove('hidden');
+        }
+        
+        // --- Mode 4: Calculate by Total Dollar Budget ---
+        function updateDurationDisplayDollar() {
+            const durationDays = document.getElementById('durationDollar').value;
+            document.getElementById('durationDisplayDollar').textContent = `${durationDays} দিন`;
+        }
+
+        function calculateByTotalDollarBudget() {
+            hideMessage();
+            updateDurationDisplayDollar();
+
+            const { exchangeRate, totalChargeRate } = getCalculatedRates();
+            const totalDollarBudget = parseFloat(document.getElementById('totalDollarInput').value);
+            const durationSlider = document.getElementById('durationDollar');
+            
+            // Strict Min: 4 Days * $1 = $4
+            const ABSOLUTE_MIN_DOLLAR_BUDGET = SLIDER_MIN_CAP * MIN_DAILY_USD;
+
+            if (isNaN(totalDollarBudget) || totalDollarBudget < ABSOLUTE_MIN_DOLLAR_BUDGET) {
+                showMessage(`সর্বনিম্ন ৪ দিনের জন্য অন্তত $${ABSOLUTE_MIN_DOLLAR_BUDGET} ডলার বাজেট প্রয়োজন।`);
+                document.getElementById('resultsDollar').classList.add('hidden');
+                return;
+            }
+            
+            // Ensure Slider Min is 4
+            if (parseInt(durationSlider.value) < SLIDER_MIN_CAP) {
+                durationSlider.value = SLIDER_MIN_CAP;
+                updateDurationDisplayDollar();
+            }
+            const durationDays = parseInt(durationSlider.value);
+
+            // 1. Calculate Daily Budget (USD)
+            const dailyBudget = totalDollarBudget / durationDays;
+
+            // Check if daily budget is too low (Strict enforcement)
+            if (dailyBudget < MIN_DAILY_USD) {
+               showMessage(`সতর্কতা: ${durationDays} দিনের জন্য $${totalDollarBudget} ডলার যথেষ্ট নয় (দৈনিক $${dailyBudget.toFixed(2)} পড়ছে, যা $1 এর কম)। দয়া করে সময়কাল কমান।`);
+               document.getElementById('resultsDollar').classList.add('hidden');
+               // Auto-correct duration to max possible days
+               const maxPossibleDays = Math.floor(totalDollarBudget / MIN_DAILY_USD);
+               durationSlider.value = maxPossibleDays;
+               updateDurationDisplayDollar();
+               // Recalculate with corrected duration
+               calculateByTotalDollarBudget(); 
+               return;
+            }
+
+            // 2. Calculate Ad Cost in BDT
+            const adCostBDT = totalDollarBudget * exchangeRate;
+
+            // 3. Calculate VAT + Service Charge
+            const chargeAmountBDT = adCostBDT * (totalChargeRate / 100);
+
+            // 4. Total Payable BDT
+            const totalPayableBDT = adCostBDT + chargeAmountBDT;
+
+            // --- Display Results ---
+            document.getElementById('dailyUSDDollarMode').textContent = formatUSDOnly(dailyBudget);
+            document.getElementById('totalBDTDollarMode').textContent = formatBDT(totalPayableBDT);
+            
+            document.getElementById('adCostBDTDollarMode').textContent = formatBDT(adCostBDT);
+            document.getElementById('breakdownChargeDollarMode').textContent = "+ " + formatBDT(chargeAmountBDT);
+
+            document.getElementById('resultsDollar').classList.remove('hidden');
+        }
+
+        // Run calculation and display update on page load with default values
+        window.onload = () => {
+            // Initialize in budget mode
+            switchMode('budget');
+        };
+    </script>
+</body>
+</html>
