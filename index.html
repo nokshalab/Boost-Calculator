@@ -3,230 +3,592 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ফিক্সড রেট অ্যাড ক্যালকুলেটর</title>
+    <title>ফেসবুক বুস্ট ম্যানেজার</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Google Fonts: Noto Sans Bengali for better readability -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
     <style>
-        body {
-            font-family: 'Hind Siliguri', sans-serif;
-            background-color: #f3f4f6;
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1e40af;
+            --bg-color: #f1f5f9;
         }
-        /* Custom Slider Styling */
+        body { 
+            font-family: 'Noto Sans Bengali', sans-serif; 
+            background-color: var(--bg-color);
+            -webkit-font-smoothing: antialiased;
+            color: #1e293b;
+        }
+        
+        /* Custom Loader */
+        .loader {
+            width: 48px;
+            height: 48px;
+            border: 5px solid #FFF;
+            border-bottom-color: var(--primary);
+            border-radius: 50%;
+            display: inline-block;
+            box-sizing: border-box;
+            animation: rotation 1s linear infinite;
+        }
+        @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Custom Slider */
         input[type=range] {
             -webkit-appearance: none;
             width: 100%;
-            height: 8px;
-            background: #e5e7eb;
-            border-radius: 5px;
+            height: 12px;
+            background: #cbd5e1;
+            border-radius: 8px;
             outline: none;
+            transition: background 0.3s;
         }
         input[type=range]::-webkit-slider-thumb {
             -webkit-appearance: none;
             appearance: none;
-            width: 24px;
-            height: 24px;
+            width: 32px;
+            height: 32px;
             border-radius: 50%;
-            background: #2563eb;
+            background: var(--primary);
             cursor: pointer;
-            box-shadow: 0 0 5px rgba(0,0,0,0.2);
+            border: 4px solid white;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            transition: transform 0.2s;
         }
-        input[type=range]::-moz-range-thumb {
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            background: #2563eb;
-            cursor: pointer;
+        input[type=range]::-webkit-slider-thumb:active { transform: scale(1.1); }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
         }
+        
+        /* Typography adjustments for numbers */
+        .num-font { font-feature-settings: "tnum"; font-variant-numeric: tabular-nums; }
     </style>
 </head>
-<body class="min-h-screen flex items-center justify-center p-4">
+<body class="min-h-screen flex flex-col items-center justify-start py-6 px-4">
 
-    <div class="bg-white w-full max-w-xl rounded-2xl shadow-xl overflow-hidden border border-gray-100">
-        
-        <!-- Header -->
-        <div class="bg-gray-900 p-6 text-white text-center">
-            <h1 class="text-2xl font-bold"><i class="fab fa-facebook-f mr-2"></i> অ্যাড কস্ট এস্টিমেটর</h1>
-            <p class="text-gray-400 text-sm mt-1">অটোমেটিক বিলিং সিস্টেম</p>
-        </div>
+    <!-- Loading Overlay -->
+    <div id="auth-loading" class="fixed inset-0 bg-white/90 z-[60] flex flex-col items-center justify-center backdrop-blur-sm">
+        <span class="loader mb-4 border-slate-300 border-b-blue-600"></span>
+        <p class="text-xl font-bold text-slate-700 animate-pulse">সিস্টেম লোড হচ্ছে...</p>
+    </div>
 
-        <div class="p-6 space-y-6">
-            
-            <!-- 1. Daily Budget Input -->
-            <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
-                <label class="block text-blue-900 font-bold mb-2">দৈনিক বাজেট (Dollar)</label>
-                <div class="relative">
-                    <span class="absolute left-4 top-3.5 text-blue-600 font-bold text-lg">$</span>
-                    <input type="number" id="dailyBudget" value="5" min="1" class="w-full pl-10 pr-4 py-3 text-xl font-bold text-gray-800 bg-white border-2 border-blue-200 rounded-lg focus:border-blue-500 focus:outline-none shadow-sm placeholder-gray-300" placeholder="0">
+    <!-- Name Input Modal -->
+    <div id="name-modal" class="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center hidden backdrop-blur-sm px-4">
+        <div class="bg-white p-8 rounded-3xl shadow-2xl max-w-md w-full transform transition-all scale-100 border-4 border-white">
+            <div class="text-center mb-8">
+                <div class="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 text-blue-600 text-3xl shadow-inner">
+                    <i class="fas fa-user-edit"></i>
                 </div>
+                <h2 class="text-2xl font-bold text-slate-800">আপনার নাম লিখুন</h2>
+                <p class="text-slate-500 mt-2 font-medium">অর্ডারটি সঠিকভাবে চেনার জন্য নাম প্রয়োজন</p>
             </div>
-
-            <!-- 2. Duration Slider (4 - 100 days) -->
-            <div>
-                <div class="flex justify-between items-end mb-2">
-                    <label class="text-gray-700 font-bold">কত দিন চলবে?</label>
-                    <span class="text-2xl font-bold text-blue-600"><span id="daysDisplay">4</span> দিন</span>
-                </div>
-                <input type="range" id="durationSlider" min="4" max="100" value="4" class="w-full cursor-pointer">
-                <div class="flex justify-between text-xs text-gray-400 mt-1">
-                    <span>৪ দিন</span>
-                    <span>১০০ দিন</span>
-                </div>
-            </div>
-
-            <!-- 3. Fixed Rate Display (Read Only) -->
-            <div class="flex items-center gap-3 opacity-75">
-                <div class="w-full">
-                    <label class="block text-gray-500 text-sm font-semibold mb-1">ফিক্সড ডলার রেট (টাকায়)</label>
-                    <input type="text" value="150" disabled class="w-full bg-gray-100 border border-gray-300 text-gray-500 font-bold py-2 px-3 rounded cursor-not-allowed">
-                </div>
-            </div>
-
-            <!-- 4. Checkboxes for VAT & Service Charge -->
-            <div class="grid grid-cols-2 gap-4">
-                <!-- VAT Checkbox -->
-                <label class="flex items-center space-x-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition select-none">
-                    <input type="checkbox" id="vatCheck" checked class="w-5 h-5 text-blue-600 rounded focus:ring-blue-500">
-                    <div>
-                        <span class="block text-gray-800 font-semibold">ভ্যাট (VAT)</span>
-                        <span class="text-xs text-gray-500">মেটা অ্যাড চার্জ ১৫%</span>
-                    </div>
-                </label>
-
-                <!-- Service Fee Checkbox -->
-                <label class="flex items-center space-x-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition select-none">
-                    <input type="checkbox" id="feeCheck" checked class="w-5 h-5 text-green-600 rounded focus:ring-green-500">
-                    <div>
-                        <span class="block text-gray-800 font-semibold">সার্ভিস চার্জ</span>
-                        <span class="text-xs text-gray-500">এজেন্সি ফি ৫%</span>
-                    </div>
-                </label>
-            </div>
-
-            <hr class="border-gray-200">
-
-            <!-- Result Summary -->
-            <div class="space-y-3 text-sm">
-                <div class="flex justify-between text-gray-600">
-                    <span>মোট ডলার খরচ:</span>
-                    <span class="font-bold">$<span id="totalUSD">0</span></span>
-                </div>
-                <div class="flex justify-between text-gray-600">
-                    <span>মূল টাকা (Rate ১৫০):</span>
-                    <span>৳ <span id="baseBDT">0</span></span>
-                </div>
-                
-                <!-- Hidden/Shown based on checkbox -->
-                <div id="vatRow" class="flex justify-between text-red-500">
-                    <span>(+) ভ্যাট (১৫%):</span>
-                    <span>৳ <span id="vatAmount">0</span></span>
-                </div>
-                <div id="feeRow" class="flex justify-between text-green-600">
-                    <span>(+) সার্ভিস চার্জ (৫%):</span>
-                    <span>৳ <span id="feeAmount">0</span></span>
-                </div>
-
-                <div class="bg-gray-900 text-white p-4 rounded-lg flex justify-between items-center mt-2 shadow-lg">
-                    <span class="font-medium">সর্বমোট প্রদেয়:</span>
-                    <span class="text-2xl font-bold">৳ <span id="grandTotal">0</span></span>
-                </div>
-            </div>
-
-            <!-- Copy Button -->
-            <button onclick="copyData()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition shadow-md flex justify-center items-center gap-2">
-                <i class="fas fa-copy"></i> ইনভয়েস কপি করুন
+            <input type="text" id="customerNameInput" class="w-full border-2 border-slate-200 rounded-2xl p-4 text-xl focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 mb-6 font-bold text-center text-slate-800 placeholder-slate-400 transition-all" placeholder="এখানে নাম লিখুন...">
+            <button onclick="saveNameAndStart()" class="w-full bg-blue-600 hover:bg-blue-700 text-white text-xl font-bold py-4 rounded-2xl transition shadow-xl shadow-blue-200 transform active:scale-[0.98]">
+                শুরু করুন <i class="fas fa-arrow-right ml-2"></i>
             </button>
-            <p id="msg" class="text-center text-green-600 text-xs h-4 opacity-0 transition-opacity">কপি করা হয়েছে!</p>
-
         </div>
     </div>
 
-    <script>
-        // Constants
-        const FIXED_RATE = 150;
+    <!-- APP CONTAINER -->
+    <div id="app-container" class="w-full max-w-xl hidden space-y-8">
+        
+        <!-- CUSTOMER VIEW -->
+        <div id="customer-view" class="animate-fade-in space-y-8">
+            
+            <!-- Calculator Card -->
+            <div class="bg-white rounded-[2rem] shadow-2xl overflow-hidden border border-slate-100 relative">
+                <!-- Decorative BG -->
+                <div class="absolute top-0 left-0 w-full h-48 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-b-[3rem] z-0"></div>
+                
+                <div class="relative z-10 px-6 pt-8 pb-6">
+                    <!-- Header -->
+                    <div class="flex justify-between items-start mb-8 text-white">
+                        <div>
+                            <h1 class="text-3xl font-bold tracking-tight mb-1">বুস্ট ক্যালকুলেটর</h1>
+                            <p class="opacity-90 font-medium text-lg flex items-center gap-2">
+                                <i class="fas fa-user-circle"></i> <span id="welcomeName">Guest</span>
+                            </p>
+                        </div>
+                        <div class="bg-white/20 p-3 rounded-2xl backdrop-blur-md">
+                            <i class="fab fa-facebook text-3xl text-white"></i>
+                        </div>
+                    </div>
 
-        // Elements
+                    <!-- Calculator Body -->
+                    <div class="bg-white rounded-3xl p-6 shadow-xl border border-slate-100 space-y-8">
+                        
+                        <!-- Budget Input -->
+                        <div>
+                            <label class="block text-slate-600 font-bold mb-3 text-lg">দৈনিক বাজেট (Dollar)</label>
+                            <div class="relative">
+                                <span class="absolute left-5 top-1/2 -translate-y-1/2 text-blue-600 font-bold text-2xl">$</span>
+                                <input type="number" id="dailyBudget" value="5" min="1" class="w-full pl-10 pr-4 py-4 bg-slate-50 border-2 border-slate-200 rounded-2xl focus:border-blue-500 focus:bg-white outline-none font-extrabold text-slate-800 text-3xl transition-all shadow-inner">
+                            </div>
+                        </div>
+
+                        <!-- Duration Slider -->
+                        <div>
+                            <div class="flex justify-between items-end mb-4">
+                                <label class="text-slate-600 font-bold text-lg">কত দিন চলবে?</label>
+                                <span class="text-white bg-blue-600 px-4 py-1.5 rounded-xl text-xl font-bold shadow-md"><span id="daysDisplay" class="num-font">4</span> দিন</span>
+                            </div>
+                            <input type="range" id="durationSlider" min="4" max="100" value="4" class="w-full">
+                            <div class="flex justify-between text-sm text-slate-400 mt-2 font-bold px-1">
+                                <span>৪ দিন</span>
+                                <span>১০০ দিন</span>
+                            </div>
+                        </div>
+
+                        <!-- Info Grid -->
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="bg-indigo-50 p-4 rounded-2xl border border-indigo-100 text-center">
+                                <p class="text-indigo-500 text-sm font-bold mb-1">ডলার রেট</p>
+                                <p class="text-xl font-extrabold text-indigo-900 num-font">১৫০ টাকা</p>
+                            </div>
+                            <div class="bg-emerald-50 p-4 rounded-2xl border border-emerald-100 text-center">
+                                <p class="text-emerald-500 text-sm font-bold mb-1">ভ্যাট ও চার্জ</p>
+                                <p class="text-xl font-extrabold text-emerald-900 num-font">অন্তর্ভুক্ত</p>
+                            </div>
+                        </div>
+
+                        <!-- Total Section -->
+                        <div class="bg-slate-900 rounded-2xl p-6 text-white shadow-xl transform transition hover:scale-[1.02]">
+                            <div class="flex justify-between items-center border-b border-slate-700 pb-4 mb-4">
+                                <span class="text-slate-300 font-medium text-lg">মোট ডলার খরচ</span>
+                                <span class="text-2xl font-bold text-yellow-400 num-font">$<span id="totalUSD">20.00</span></span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-xl font-bold text-slate-200">সর্বমোট প্রদেয়</span>
+                                <span class="text-4xl font-extrabold text-white num-font">৳ <span id="grandTotal">0</span></span>
+                            </div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <button id="btn-submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-5 rounded-2xl shadow-xl shadow-blue-200 transition-all text-xl flex justify-center items-center gap-3">
+                            <span>অর্ডার কনফার্ম করুন</span>
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order List Header -->
+            <div class="flex items-center gap-3 px-2">
+                <div class="w-1.5 h-8 bg-blue-600 rounded-full"></div>
+                <h3 class="font-bold text-slate-700 text-2xl">আপনার অর্ডার সমূহ</h3>
+            </div>
+
+            <!-- Orders Feed -->
+            <div id="user-orders-list" class="space-y-6 pb-24">
+                <!-- Javascript will inject orders here -->
+            </div>
+        </div>
+
+        <!-- ADMIN VIEW -->
+        <div id="admin-view" class="hidden h-[90vh] flex flex-col bg-white rounded-[2rem] shadow-2xl border border-slate-200 overflow-hidden">
+            <div class="p-6 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-800">অ্যাডমিন ড্যাশবোর্ড</h2>
+                    <p class="text-sm text-slate-500 font-medium">অর্ডার ম্যানেজমেন্ট</p>
+                </div>
+                <button onclick="logoutAdmin()" class="bg-red-50 text-red-600 px-4 py-2 rounded-xl font-bold hover:bg-red-100 transition border border-red-100">
+                    <i class="fas fa-sign-out-alt mr-1"></i> লগ আউট
+                </button>
+            </div>
+            
+            <div class="bg-blue-50 px-6 py-3 flex justify-between items-center border-b border-blue-100">
+                <span class="font-bold text-blue-800">মোট পেন্ডিং/এক্টিভ</span>
+                <span class="bg-blue-600 text-white px-3 py-1 rounded-lg font-bold text-sm" id="order-count">0</span>
+            </div>
+
+            <div id="admin-orders-list" class="flex-1 overflow-y-auto p-0 bg-slate-50">
+                <div class="p-12 text-center text-slate-400 font-medium text-lg">অর্ডার লোড হচ্ছে...</div>
+            </div>
+        </div>
+
+        <!-- Hidden Login Trigger -->
+        <div class="fixed bottom-0 left-0 w-full p-4 flex justify-center pointer-events-none z-0">
+            <button onclick="toggleAdminPrompt()" class="pointer-events-auto text-xs text-slate-300 hover:text-slate-500 font-bold px-4 py-2 bg-white/80 rounded-full backdrop-blur border border-slate-200 shadow-sm transition">
+                দোকানদার লগইন
+            </button>
+        </div>
+    </div>
+
+    <!-- Firebase Logic -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // CONFIG
+        const firebaseConfig = {
+            apiKey: "AIzaSyAcV09xDE_EIYvR_0zpqEvTVmybeGtu58E",
+            authDomain: "noksha-lab-boosting.firebaseapp.com",
+            projectId: "noksha-lab-boosting",
+            storageBucket: "noksha-lab-boosting.firebasestorage.app",
+            messagingSenderId: "927302871148",
+            appId: "1:927302871148:web:bb4a74d06222d167a45049"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const COLLECTION_NAME = "facebook_orders"; 
+        const ORDERS_REF = collection(db, COLLECTION_NAME);
+
+        const FIXED_RATE = 150;
+        const VAT_PERCENT = 0.15;
+        const FEE_PERCENT = 0.05;
+
+        let currentUser = null;
+        let isAdmin = false;
+        let customerName = localStorage.getItem('fb_boost_username_v2') || '';
+
+        // UI Elements
         const dailyInput = document.getElementById('dailyBudget');
         const slider = document.getElementById('durationSlider');
         const daysDisplay = document.getElementById('daysDisplay');
-        const vatCheck = document.getElementById('vatCheck');
-        const feeCheck = document.getElementById('feeCheck');
-
-        // Display Elements
         const totalUSDDisplay = document.getElementById('totalUSD');
-        const baseBDTDisplay = document.getElementById('baseBDT');
-        const vatRow = document.getElementById('vatRow');
-        const vatAmountDisplay = document.getElementById('vatAmount');
-        const feeRow = document.getElementById('feeRow');
-        const feeAmountDisplay = document.getElementById('feeAmount');
         const grandTotalDisplay = document.getElementById('grandTotal');
+        const btnSubmit = document.getElementById('btn-submit');
+        const userOrdersList = document.getElementById('user-orders-list');
+        const adminOrdersList = document.getElementById('admin-orders-list');
+        const nameModal = document.getElementById('name-modal');
+        const welcomeNameDisplay = document.getElementById('welcomeName');
+
+        // --- DATE UTILS ---
+        function formatDateTime(timestamp) {
+            if (!timestamp) return 'প্রক্রিয়াধীন...';
+            const date = timestamp.toDate();
+            // Using en-US locale with options to convert to Bangla digits manually if needed
+            // But Noto Sans Bengali handles standard digits well.
+            // Let's use standard Bengali locale formatting
+            return date.toLocaleDateString('bn-BD', {
+                day: 'numeric', month: 'long', year: 'numeric',
+                hour: '2-digit', minute: '2-digit'
+            });
+        }
+
+        function calculateEndDate(startDate, days) {
+            if (!startDate) return null;
+            const end = new Date(startDate.toDate());
+            end.setDate(end.getDate() + parseInt(days));
+            return end.toLocaleDateString('bn-BD', {
+                day: 'numeric', month: 'long', year: 'numeric',
+                hour: '2-digit', minute: '2-digit'
+            });
+        }
+
+        // --- CORE FUNCTIONS ---
+        window.saveNameAndStart = () => {
+            const name = document.getElementById('customerNameInput').value.trim();
+            if(name.length < 2) return alert("দয়া করে সঠিক নাম দিন");
+            
+            customerName = name;
+            localStorage.setItem('fb_boost_username_v2', name);
+            
+            nameModal.classList.add('hidden');
+            document.getElementById('app-container').classList.remove('hidden');
+            welcomeNameDisplay.innerText = customerName;
+        };
+
+        signInAnonymously(auth).catch((error) => console.error(error));
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUser = user;
+                document.getElementById('auth-loading').style.display = 'none';
+                
+                if (!customerName) {
+                    nameModal.classList.remove('hidden');
+                } else {
+                    document.getElementById('app-container').classList.remove('hidden');
+                    welcomeNameDisplay.innerText = customerName;
+                }
+                listenToOrders();
+            }
+        });
 
         function calculate() {
-            // Get Values
             const daily = parseFloat(dailyInput.value) || 0;
             const days = parseInt(slider.value);
+            daysDisplay.innerText = days; 
             
-            // Update Slider Text
-            daysDisplay.innerText = days;
-
-            // Core Logic
             const totalUSD = daily * days;
             const baseBDT = totalUSD * FIXED_RATE;
+            const finalAmount = baseBDT + (baseBDT * VAT_PERCENT) + (baseBDT * FEE_PERCENT);
 
-            // Optional Costs
-            let vatBDT = 0;
-            let feeBDT = 0;
-
-            if (vatCheck.checked) {
-                vatBDT = baseBDT * 0.15; // 15%
-                vatRow.style.display = 'flex';
-            } else {
-                vatRow.style.display = 'none';
-            }
-
-            if (feeCheck.checked) {
-                feeBDT = baseBDT * 0.05; // 5%
-                feeRow.style.display = 'flex';
-            } else {
-                feeRow.style.display = 'none';
-            }
-
-            const finalAmount = baseBDT + vatBDT + feeBDT;
-
-            // Update UI
             totalUSDDisplay.innerText = totalUSD.toFixed(2);
-            baseBDTDisplay.innerText = Math.round(baseBDT).toLocaleString('bn-BD');
-            vatAmountDisplay.innerText = Math.round(vatBDT).toLocaleString('bn-BD');
-            feeAmountDisplay.innerText = Math.round(feeBDT).toLocaleString('bn-BD');
             grandTotalDisplay.innerText = Math.round(finalAmount).toLocaleString('bn-BD');
+            
+            return { daily, days, totalUSD, finalAmount: Math.round(finalAmount) };
         }
 
-        function copyData() {
-            const total = grandTotalDisplay.innerText;
-            const usd = totalUSDDisplay.innerText;
-            const days = slider.value;
-            
-            const text = `অ্যাড বিলিং বিস্তারিত:\nসময়কাল: ${days} দিন\nমোট ডলার: $${usd}\nরেট: ১৫0 টাকা\n-------------------\nসর্বমোট বিল: ৳${total}\n(ভ্যাট ও চার্জ অন্তর্ভুক্ত)`;
-            
-            const el = document.createElement('textarea');
-            el.value = text;
-            document.body.appendChild(el);
-            el.select();
-            document.execCommand('copy');
-            document.body.removeChild(el);
-
-            const msg = document.getElementById('msg');
-            msg.classList.remove('opacity-0');
-            setTimeout(() => msg.classList.add('opacity-0'), 2000);
-        }
-
-        // Listeners
         dailyInput.addEventListener('input', calculate);
         slider.addEventListener('input', calculate);
-        vatCheck.addEventListener('change', calculate);
-        feeCheck.addEventListener('change', calculate);
 
-        // Init
+        btnSubmit.addEventListener('click', async () => {
+            if(!currentUser) return;
+            const calc = calculate();
+            
+            btnSubmit.innerHTML = `<i class="fas fa-spinner fa-spin animate-spin"></i> প্রসেসিং...`;
+            btnSubmit.disabled = true;
+
+            try {
+                await addDoc(ORDERS_REF, {
+                    userId: currentUser.uid,
+                    customerName: customerName,
+                    dailyBudget: calc.daily,
+                    days: calc.days,
+                    totalUSD: calc.totalUSD,
+                    totalBDT: calc.finalAmount,
+                    status: 'pending',
+                    createdAt: serverTimestamp(),
+                    approvedAt: null
+                });
+
+                // Scroll to bottom to see new order
+                setTimeout(() => {
+                    userOrdersList.scrollIntoView({ behavior: 'smooth', block: 'end' });
+                }, 500);
+
+                calculate(); 
+                alert("অর্ডার সফলভাবে পাঠানো হয়েছে!");
+
+            } catch (error) {
+                alert("সমস্যা হয়েছে। ইন্টারনেট চেক করুন।");
+            } finally {
+                btnSubmit.innerHTML = `<span>অর্ডার কনফার্ম করুন</span> <i class="fas fa-paper-plane"></i>`;
+                btnSubmit.disabled = false;
+            }
+        });
+
+        function listenToOrders() {
+            onSnapshot(ORDERS_REF, (snapshot) => {
+                const orders = [];
+                snapshot.forEach(doc => {
+                    orders.push({ id: doc.id, ...doc.data() });
+                });
+                // Sort newest first
+                orders.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+
+                renderUserOrders(orders);
+                if(isAdmin) renderAdminOrders(orders);
+            });
+        }
+
+        // --- RENDER USER ORDERS (IMPROVED DESIGN) ---
+        function renderUserOrders(allOrders) {
+            const myOrders = allOrders.filter(o => o.userId === currentUser.uid && o.status !== 'cancelled');
+            
+            if(myOrders.length === 0) {
+                userOrdersList.innerHTML = `
+                    <div class="text-center py-12 bg-white rounded-[2rem] border-2 border-dashed border-slate-200">
+                        <i class="fas fa-box-open text-slate-300 text-6xl mb-4"></i>
+                        <p class="text-slate-500 font-bold text-lg">আপনার কোনো অর্ডার নেই</p>
+                        <p class="text-slate-400 text-sm">উপরের ক্যালকুলেটর ব্যবহার করে অর্ডার করুন</p>
+                    </div>`;
+                return;
+            }
+
+            userOrdersList.innerHTML = myOrders.map(order => {
+                const isApproved = order.status === 'approved';
+                const statusColor = isApproved ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700';
+                const statusText = isApproved ? 'এক্টিভ (Approved)' : 'রিভিউ চলছে (Pending)';
+                const borderColor = isApproved ? 'border-green-500' : 'border-slate-200';
+                
+                let scheduleBlock = '';
+                
+                // DISPLAY SCHEDULE IF APPROVED
+                if (isApproved && order.approvedAt) {
+                    const startDate = formatDateTime(order.approvedAt);
+                    const endDate = calculateEndDate(order.approvedAt, order.days);
+                    
+                    scheduleBlock = `
+                        <div class="bg-slate-50 rounded-xl p-5 mt-4 border border-slate-200">
+                            <h4 class="text-slate-500 font-bold text-sm mb-3 uppercase tracking-wide border-b border-slate-200 pb-2">বুস্টিং সময়সীমা</h4>
+                            
+                            <div class="space-y-4">
+                                <div class="flex items-start gap-3">
+                                    <div class="mt-1 w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
+                                        <i class="fas fa-play text-xs"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs text-slate-500 font-bold">শুরু হয়েছে</p>
+                                        <p class="text-lg font-extrabold text-slate-800">${startDate}</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="w-0.5 h-6 bg-slate-300 ml-4"></div>
+                                
+                                <div class="flex items-start gap-3">
+                                    <div class="mt-1 w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-red-600">
+                                        <i class="fas fa-flag-checkered text-xs"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs text-slate-500 font-bold">শেষ হবে</p>
+                                        <p class="text-lg font-extrabold text-red-600">${endDate}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-4 bg-white p-3 rounded-lg text-center font-bold text-slate-600 border border-slate-200 text-sm shadow-sm">
+                                মোট মেয়াদ: <span class="text-blue-600 text-lg mx-1">${order.days}</span> দিন
+                            </div>
+                        </div>
+                    `;
+                } else {
+                     // Pending State
+                     scheduleBlock = `
+                        <div class="bg-amber-50 rounded-xl p-4 mt-4 border border-amber-100 text-center">
+                            <i class="fas fa-hourglass-half text-amber-500 text-2xl mb-2 animate-pulse"></i>
+                            <p class="text-amber-800 font-bold text-sm">অ্যাডমিন এপ্রুভালের জন্য অপেক্ষা করুন...</p>
+                        </div>
+                     `;
+                }
+
+                return `
+                    <div class="bg-white p-6 rounded-[2rem] shadow-xl border-l-8 ${borderColor} animate-fade-in relative overflow-hidden">
+                        
+                        <!-- Top Row: ID & Status -->
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">অর্ডার বিবরণ</span>
+                                <h3 class="text-3xl font-extrabold text-slate-800 num-font">৳ ${order.totalBDT}</h3>
+                            </div>
+                            <span class="${statusColor} px-4 py-2 rounded-xl text-xs font-extrabold uppercase tracking-wide shadow-sm">
+                                ${statusText}
+                            </span>
+                        </div>
+
+                        <!-- Budget Details Pill -->
+                        <div class="flex flex-wrap gap-2 mb-2">
+                             <div class="bg-blue-50 text-blue-800 px-3 py-1.5 rounded-lg text-sm font-bold border border-blue-100">
+                                <i class="fas fa-dollar-sign mr-1"></i> বাজেট: $${order.dailyBudget}
+                             </div>
+                             <div class="bg-purple-50 text-purple-800 px-3 py-1.5 rounded-lg text-sm font-bold border border-purple-100">
+                                <i class="far fa-calendar-alt mr-1"></i> ${order.days} দিন
+                             </div>
+                        </div>
+
+                        <!-- Schedule Block -->
+                        ${scheduleBlock}
+
+                        <!-- Timestamp -->
+                        <div class="mt-4 text-right">
+                             <span class="text-[10px] font-bold text-slate-300">অর্ডার আইডি: ${order.id.slice(0,6)}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // --- RENDER ADMIN ORDERS ---
+        function renderAdminOrders(allOrders) {
+            const activeOrders = allOrders.filter(o => o.status !== 'cancelled');
+            document.getElementById('order-count').innerText = activeOrders.length;
+            
+            if(activeOrders.length === 0) {
+                adminOrdersList.innerHTML = '<div class="p-10 text-center text-slate-400">কোনো অর্ডার নেই</div>';
+                return;
+            }
+
+            adminOrdersList.innerHTML = activeOrders.map(order => {
+                const isApproved = order.status === 'approved';
+                const displayName = order.customerName || 'Unknown';
+                const orderTime = order.createdAt ? order.createdAt.toDate().toLocaleTimeString('bn-BD', {hour: '2-digit', minute:'2-digit'}) : '...';
+                
+                let endDateStr = '';
+                if(isApproved && order.approvedAt) {
+                    const end = new Date(order.approvedAt.toDate());
+                    end.setDate(end.getDate() + parseInt(order.days));
+                    endDateStr = end.toLocaleDateString('bn-BD');
+                }
+
+                return `
+                <div class="p-5 bg-white border-b border-slate-100 hover:bg-blue-50/50 transition duration-150">
+                    <div class="flex justify-between items-start mb-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-bold text-lg">
+                                ${displayName.charAt(0)}
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-slate-800 text-lg">${displayName}</h4>
+                                <span class="text-xs text-slate-400 font-bold bg-slate-100 px-2 py-0.5 rounded">${orderTime}</span>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-xl font-extrabold text-blue-600 num-font">৳${order.totalBDT}</div>
+                            ${isApproved ? `<div class="text-[10px] font-bold text-red-500 mt-1">শেষ: ${endDateStr}</div>` : ''}
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-3 gap-2 text-center mb-4">
+                        <div class="bg-slate-50 p-2 rounded-lg border border-slate-200">
+                            <div class="text-xs text-slate-400 font-bold">বাজেট</div>
+                            <div class="font-bold text-slate-700">$${order.dailyBudget}</div>
+                        </div>
+                        <div class="bg-slate-50 p-2 rounded-lg border border-slate-200">
+                            <div class="text-xs text-slate-400 font-bold">সময়</div>
+                            <div class="font-bold text-slate-700">${order.days} দিন</div>
+                        </div>
+                        <div class="bg-slate-50 p-2 rounded-lg border border-slate-200">
+                            <div class="text-xs text-slate-400 font-bold">USD</div>
+                            <div class="font-bold text-slate-700">$${order.totalUSD}</div>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-2">
+                        ${isApproved 
+                            ? `<button onclick="window.updateOrderStatus('${order.id}', 'cancelled')" class="w-full py-3 bg-white text-red-500 font-bold rounded-xl border-2 border-red-100 hover:bg-red-50 transition text-sm">
+                                <i class="fas fa-ban mr-1"></i> শেষ / ডিলিট করুন
+                               </button>`
+                            : `<button onclick="window.updateOrderStatus('${order.id}', 'approved')" class="flex-1 py-3 bg-blue-600 text-white font-bold rounded-xl shadow-lg shadow-blue-200 hover:bg-blue-700 transition text-sm">
+                                <i class="fas fa-check mr-1"></i> এপ্রুভ করুন
+                               </button>
+                               <button onclick="window.updateOrderStatus('${order.id}', 'cancelled')" class="px-5 py-3 bg-white text-red-500 rounded-xl border-2 border-red-100 hover:bg-red-50 font-bold">
+                                <i class="fas fa-trash"></i>
+                               </button>`
+                        }
+                    </div>
+                </div>
+                `;
+            }).join('');
+        }
+
+        // --- ADMIN ACTIONS ---
+        window.updateOrderStatus = async (id, status) => {
+            if(!confirm("আপনি কি নিশ্চিত?")) return;
+            try {
+                const updateData = { status: status };
+                if (status === 'approved') updateData.approvedAt = serverTimestamp();
+                await updateDoc(doc(db, COLLECTION_NAME, id), updateData);
+            } catch (e) { alert("Error: " + e.message); }
+        };
+
+        window.toggleAdminPrompt = () => {
+            const pass = prompt("Password:");
+            if (pass === "1234") {
+                isAdmin = true;
+                document.getElementById('customer-view').classList.add('hidden');
+                document.getElementById('admin-view').classList.remove('hidden');
+                listenToOrders();
+            } else if (pass) alert("Wrong Password");
+        };
+
+        window.logoutAdmin = () => {
+            isAdmin = false;
+            document.getElementById('admin-view').classList.add('hidden');
+            document.getElementById('customer-view').classList.remove('hidden');
+        };
+
         calculate();
     </script>
 </body>
